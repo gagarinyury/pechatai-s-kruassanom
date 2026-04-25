@@ -11,9 +11,10 @@ interface KeyboardProps {
   activeKey?: string;
   nextKey?: string;
   pressedKey?: string;
+  compact?: boolean;
 }
 
-export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, pressedKey }) => {
+export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, pressedKey, compact = false }) => {
   const normalizedActiveKey = activeKey?.toLowerCase();
   const normalizedNextKey = nextKey?.toLowerCase();
 
@@ -23,12 +24,12 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
   };
 
   return (
-    <div className="flex flex-col gap-1.5 p-6 bg-white dark:bg-stone-900 rounded-3xl border-2 border-bakery-100 dark:border-stone-800 shadow-xl overflow-hidden select-none w-full max-w-4xl transition-all duration-300">
+    <div className={`flex flex-col bg-white dark:bg-stone-900 rounded-3xl border-2 border-bakery-100 dark:border-stone-800 shadow-xl overflow-hidden select-none w-full transition-all duration-300 ${compact ? 'max-w-5xl gap-1 p-4' : 'max-w-4xl gap-1.5 p-6'}`}>
       {RUSSIAN_LAYOUT.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
-          className="flex gap-1.5 justify-center" 
-          style={{ marginLeft: `${rowIndex * 1.2}rem` }}
+          className={`flex justify-center ${compact ? 'gap-1' : 'gap-1.5'}`}
+          style={{ marginLeft: `${rowIndex * (compact ? 0.85 : 1.2)}rem` }}
         >
           {row.map((keyInfo) => {
             const fingerStyle = FINGER_STYLES[keyInfo.finger];
@@ -49,7 +50,8 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
                   y: isPressed ? 2 : 0,
                 }}
                 className={`
-                  relative w-12 h-12 flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-75
+                  relative flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-75
+                  ${compact ? 'w-10 h-10' : 'w-12 h-12'}
                   ${isTarget ? 'z-10 font-black' : 'font-bold'}
                 `}
                 title={fingerStyle.label}
@@ -57,7 +59,7 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
                 {/* Finger Indicator Dot */}
                 {!isTarget && !isPressed && (
                   <div
-                    className="absolute top-1 w-1.5 h-1.5 rounded-full opacity-70 transition-opacity"
+                    className={`absolute top-1 rounded-full opacity-70 transition-opacity ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`}
                     style={{ backgroundColor: fingerStyle.base }}
                   />
                 )}
@@ -67,7 +69,7 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
                     {keyInfo.shiftKey}
                   </span>
                 ) }
-                <span className="uppercase text-lg tracking-tighter">{keyInfo.key}</span>
+                <span className={`uppercase tracking-tighter ${compact ? 'text-base' : 'text-lg'}`}>{keyInfo.key}</span>
               </motion.div>
             );
           })}
@@ -75,7 +77,7 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
       ))}
       
       {/* Spacebar */}
-      <div className="flex justify-center mt-2 ml-16">
+      <div className={`flex justify-center ${compact ? 'mt-1 ml-12' : 'mt-2 ml-16'}`}>
         <motion.div
            animate={{
             scale: pressedKey === ' ' ? 0.98 : 1,
@@ -85,7 +87,8 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
             y: pressedKey === ' ' ? 2 : 0,
           }}
           className={`
-            w-80 h-11 rounded-xl border-2 flex items-center justify-center relative transition-all
+            rounded-xl border-2 flex items-center justify-center relative transition-all
+            ${compact ? 'w-72 h-9' : 'w-80 h-11'}
           `}
           title={FINGER_STYLES[5].label}
         >

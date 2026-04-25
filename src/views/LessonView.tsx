@@ -67,7 +67,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
 
   return (
     <div className="min-h-screen bg-bakery-50 font-sans text-bakery-900 selection:bg-bakery-200">
-      <main className="min-h-screen w-full max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-4 flex flex-col gap-3">
+      <main className="min-h-screen w-full max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col gap-2.5">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             {engine.gameState !== 'typing' && (
@@ -99,8 +99,8 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
           <CompactMetric label="Прогресс" value={`${engine.progressPercent}%`} />
         </div>
 
-        <section className="flex-1 flex flex-col gap-3">
-          <div className="w-full bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative min-h-[210px] md:min-h-[230px] flex items-center">
+        <section className="flex-1 flex flex-col gap-2.5">
+          <div className="w-full bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative min-h-[180px] md:min-h-[205px] flex items-center">
             <div className="absolute left-5 top-4 right-5 flex items-center justify-between gap-4">
               <p className="text-xs md:text-sm text-bakery-400 font-bold truncate">{currentExercise.description}</p>
               <span className="shrink-0 text-[10px] uppercase tracking-widest font-black text-bakery-400">{currentExercise.type}</span>
@@ -119,7 +119,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
               )}
             </AnimatePresence>
 
-            <div className="w-full pt-8 text-3xl md:text-5xl font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
+            <div className="w-full pt-7 text-3xl md:text-4xl font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
               <span className="opacity-40">{engine.userInput}</span>
               {engine.gameState !== 'finished' && (
                 <span className="relative">
@@ -213,7 +213,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             <div className="overflow-hidden flex items-center justify-center">
               <HandsGuide activeFinger={engine.activeFinger} compact />
             </div>
-            <VirtualKeyboard activeKey={engine.activeChar} nextKey={engine.nextChar} pressedKey={engine.pressedKey} />
+            <VirtualKeyboard activeKey={engine.activeChar} nextKey={engine.nextChar} pressedKey={engine.pressedKey} compact />
           </div>
         </section>
       </main>
