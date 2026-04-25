@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ChevronRight,
   RotateCcw,
-  Target,
   TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -68,14 +67,14 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
 
   return (
     <div className="min-h-screen bg-bakery-50 font-sans text-bakery-900 selection:bg-bakery-200">
-      <main className="min-h-screen w-full max-w-6xl mx-auto px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4">
+      <main className="min-h-screen w-full max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-4 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             {engine.gameState !== 'typing' && (
               <button
                 type="button"
                 onClick={handleBackToCourse}
-                className="w-10 h-10 rounded-xl border border-bakery-100 bg-white text-bakery-600 hover:border-bakery-300 hover:text-bakery-900 flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-xl border border-bakery-100 bg-white text-bakery-600 hover:border-bakery-300 hover:text-bakery-900 flex items-center justify-center transition-colors"
                 title="К курсу"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -83,24 +82,25 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             )}
             <div className="min-w-0">
               <span className="text-[10px] text-bakery-400 uppercase font-black tracking-widest">День {currentDay.dayNumber} · Урок {currentDay.exercises.findIndex((exercise) => exercise.id === currentExercise.id) + 1}</span>
-              <h1 className="text-xl md:text-2xl font-black text-bakery-800 tracking-tight truncate">{currentExercise.title}</h1>
+              <div className="flex items-center gap-3 min-w-0">
+                <h1 className="text-xl md:text-2xl font-black text-bakery-800 tracking-tight truncate">{currentExercise.title}</h1>
+                <span className="hidden sm:inline-flex shrink-0 rounded-full bg-white border border-bakery-100 px-3 py-1 text-xs font-black text-bakery-700 shadow-sm">
+                  цель {currentExercise.targetAccuracy}%
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="hidden md:flex items-center gap-2 rounded-2xl bg-white border border-bakery-100 px-4 py-3 shadow-sm">
-            <Target className="w-4 h-4 text-bakery-600" />
-            <span className="text-sm font-black text-bakery-700">{currentExercise.targetAccuracy}% точность</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 md:gap-3">
+        <div className="grid grid-cols-4 gap-2">
           <CompactMetric label="Точность" value={`${engine.liveStats.accuracy}%`} />
           <CompactMetric label="Ошибки" value={engine.mistakes} />
           <CompactMetric label="Скорость" value={engine.liveStats.cpm} />
           <CompactMetric label="Прогресс" value={`${engine.progressPercent}%`} />
         </div>
 
-        <section className="flex-1 flex flex-col gap-4">
-          <div className="w-full bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-8 relative min-h-[240px] md:min-h-[280px] flex items-center">
+        <section className="flex-1 flex flex-col gap-3">
+          <div className="w-full bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative min-h-[210px] md:min-h-[230px] flex items-center">
             <div className="absolute left-5 top-4 right-5 flex items-center justify-between gap-4">
               <p className="text-xs md:text-sm text-bakery-400 font-bold truncate">{currentExercise.description}</p>
               <span className="shrink-0 text-[10px] uppercase tracking-widest font-black text-bakery-400">{currentExercise.type}</span>
@@ -119,7 +119,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
               )}
             </AnimatePresence>
 
-            <div className="w-full pt-8 text-3xl md:text-5xl font-mono leading-relaxed whitespace-pre-wrap break-words tracking-tight text-bakery-800">
+            <div className="w-full pt-8 text-3xl md:text-5xl font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
               <span className="opacity-40">{engine.userInput}</span>
               {engine.gameState !== 'finished' && (
                 <span className="relative">
@@ -209,7 +209,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             </div>
           )}
 
-          <div className="w-full space-y-1">
+          <div className="w-full space-y-0">
             <div className="overflow-hidden flex items-center justify-center">
               <HandsGuide activeFinger={engine.activeFinger} compact />
             </div>
