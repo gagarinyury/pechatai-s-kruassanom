@@ -90,6 +90,13 @@ async function clickExerciseCard(page: Page, title: string) {
   await card.click();
 }
 
+async function dismissLessonIntro(page: Page) {
+  const introButton = page.getByRole('button', { name: 'Понятно, начать', exact: true });
+  if (await introButton.count()) {
+    await introButton.click();
+  }
+}
+
 async function waitForCourseView(page: Page) {
   await page.waitForFunction(() => document.body.innerText.includes('НЕДЕЛЯ 1: БАЗА СЛЕПОЙ ПЕЧАТИ'));
 }
@@ -161,6 +168,7 @@ async function main() {
 
     await clickExerciseCard(page, firstExercise.title);
     await page.getByRole('heading', { name: firstExercise.title, exact: true }).waitFor();
+    await dismissLessonIntro(page);
     await completeExercise(page, firstExercise.content);
     await page.getByText('Прогресс сохранен', { exact: true }).waitFor();
     await page.locator('button[title="К курсу"]').click();
@@ -168,6 +176,7 @@ async function main() {
 
     await clickExerciseCard(page, secondExercise.title);
     await page.getByRole('heading', { name: secondExercise.title, exact: true }).waitFor();
+    await dismissLessonIntro(page);
     await page.locator('button[title="К курсу"]').click();
     await waitForCourseView(page);
 

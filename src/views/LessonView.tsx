@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   ChevronRight,
+  CircleDot,
+  Hand,
+  Keyboard,
   RotateCcw,
   TrendingUp,
 } from 'lucide-react';
@@ -27,6 +30,7 @@ interface LessonViewProps {
 export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
   const { user } = useAuth();
   const progress = useProgress(user?.id ?? null);
+  const [lessonIntroDismissed, setLessonIntroDismissed] = useState(false);
 
   const currentDay = useMemo(() => {
     return WEEK_1.days.find((day) => day.id === dayId) || WEEK_1.days[0];
@@ -51,7 +55,8 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
   const engine = useTypingEngine({
     exerciseContent: currentExercise.content,
     targetAccuracy: currentExercise.targetAccuracy,
-    active: !progress.loading,
+    targetCpm: currentExercise.targetCpm,
+    active: !progress.loading && lessonIntroDismissed,
     onSaveResult: handleSaveResult,
   });
 
@@ -59,6 +64,16 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
   const isDayCompleted = isLastExerciseInDay && Boolean(engine.lastResult?.passed);
   const isWeekCompleted = isFinalExercise && Boolean(engine.lastResult?.passed);
   const nextDayNumber = isDayCompleted && nextTarget ? nextTarget.day.dayNumber : null;
+  const shouldShowLessonIntro = engine.gameState === 'idle' && !lessonIntroDismissed;
+  const targetSummary = currentExercise.targetCpm
+    ? `${currentExercise.targetAccuracy}% и ${currentExercise.targetCpm} CPM`
+    : `${currentExercise.targetAccuracy}%`;
+  const speedGateFailed = Boolean(
+    engine.lastResult
+      && currentExercise.targetCpm
+      && engine.lastResult.accuracy >= currentExercise.targetAccuracy
+      && engine.lastResult.cpm < currentExercise.targetCpm,
+  );
 
   const handleBackToCourse = useCallback(() => {
     engine.reset();
@@ -69,6 +84,14 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
     if (!nextTarget) return;
     onNavigate('lesson', nextTarget.day.id, nextTarget.exercise.id);
   }, [nextTarget, onNavigate]);
+
+  const handleDismissLessonIntro = useCallback(() => {
+    setLessonIntroDismissed(true);
+  }, []);
+
+  useEffect(() => {
+    setLessonIntroDismissed(false);
+  }, [currentExercise.id]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -113,11 +136,11 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
               </button>
             )}
             <div className="min-w-0">
-              <span className="text-[10px] text-bakery-400 uppercase font-black tracking-widest">День {currentDay.dayNumber} · Урок {currentDay.exercises.findIndex((exercise) => exercise.id === currentExercise.id) + 1}</span>
+              <span className="text-[10px] text-bakery-400 uppercase font-black tracking-widest">День {currentDay.dayNumber} · Урок {currentExerciseIndex + 1}</span>
               <div className="flex items-center gap-3 min-w-0">
                 <h1 className="text-xl md:text-2xl font-black text-bakery-800 tracking-tight truncate">{currentExercise.title}</h1>
                 <span className="hidden sm:inline-flex shrink-0 rounded-full bg-white border border-bakery-100 px-3 py-1 text-xs font-black text-bakery-700 shadow-sm">
-                  цель {currentExercise.targetAccuracy}%
+                  цель {targetSummary}
                 </span>
               </div>
             </div>
@@ -151,6 +174,84 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
               )}
             </AnimatePresence>
 
+            <AnimatePresence>
+              {shouldShowLessonIntro && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className="absolute inset-0 z-30 rounded-3xl bg-white/96 backdrop-blur-sm p-4 md:p-6 flex items-center justify-center"
+                >
+                  <div className="w-full max-w-2xl rounded-3xl border border-bakery-100 bg-white p-5 md:p-6 shadow-xl">
+                    <div className="flex items-center gap-3 text-bakery-700">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-bakery-100 text-xl">🥐</div>
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-bakery-400">Перед уроком</div>
+                        <h2 className="text-xl md:text-2xl font-black tracking-tight text-bakery-900">{currentExercise.title}</h2>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                      <div className="rounded-2xl border border-bakery-100 bg-bakery-50 px-4 py-4">
+                        <Hand className="h-5 w-5 text-bakery-700" />
+                        <div className="mt-2 text-sm font-black text-bakery-900">Поставьте руки в дом</div>
+                        <p className="mt-1 text-sm leading-relaxed text-bakery-600">Левая рука на <span className="font-black">ф ы в а</span>, правая на <span className="font-black">о л д ж</span>. Указательные стоят на <span className="font-black">а</span> и <span className="font-black">о</span>, ориентир по насечкам на <span className="font-black">F/J</span>.</p>
+                      </div>
+
+                      <div className="rounded-2xl border border-bakery-100 bg-bakery-50 px-4 py-4">
+                        <CircleDot className="h-5 w-5 text-bakery-700" />
+                        <div className="mt-2 text-sm font-black text-bakery-900">Смотрите на цвет</div>
+                        <p className="mt-1 text-sm leading-relaxed text-bakery-600">Цвет клавиши совпадает с цветом пальца. Подсветка на клавиатуре и руках показывает, чем нажимать сейчас.</p>
+                      </div>
+
+                      <div className="rounded-2xl border border-bakery-100 bg-bakery-50 px-4 py-4">
+                        <Keyboard className="h-5 w-5 text-bakery-700" />
+                        <div className="mt-2 text-sm font-black text-bakery-900">Печатайте спокойно</div>
+                        <p className="mt-1 text-sm leading-relaxed text-bakery-600">Нужна русская раскладка. Двигается один палец, кисть не путешествует. Пробел нажимайте большим пальцем.</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-bakery-100 bg-bakery-50 px-4 py-4">
+                      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-bakery-400">Ключевой фокус</div>
+                      <p className="mt-2 text-sm leading-relaxed text-bakery-700">
+                        Сейчас главный фокус на клавишах <span className="font-black uppercase">{currentExercise.focusKeys.join(' ')}</span>. Цель урока: <span className="font-black">{targetSummary}</span>.
+                      </p>
+                    </div>
+
+                    <div className="mt-3 rounded-2xl border border-bakery-100 bg-white px-4 py-4">
+                      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-bakery-400">Что сделать в этом уроке</div>
+                      <p className="mt-2 text-sm leading-relaxed text-bakery-700">{currentExercise.preLessonNote}</p>
+                    </div>
+
+                    <div className="mt-3 rounded-2xl border border-bakery-100 bg-bakery-50 px-4 py-4">
+                      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-bakery-400">Подсказка тренера</div>
+                      <p className="mt-2 text-sm leading-relaxed text-bakery-700">{currentExercise.coachNote}</p>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm text-bakery-500">Короткая памятка показывается перед каждым уроком, чтобы не терять механику рук.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={handleBackToCourse}
+                          className="rounded-full border border-bakery-200 px-4 py-2 text-sm font-black text-bakery-700 transition-colors hover:bg-bakery-50"
+                        >
+                          Вернуться к курсу
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDismissLessonIntro}
+                          className="rounded-full bg-bakery-700 px-5 py-2 text-sm font-black text-white shadow-lg shadow-bakery-500/20 transition-all hover:bg-bakery-800"
+                        >
+                          Понятно, начать
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="w-full pt-7 text-3xl md:text-[2.5rem] font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
               <span className="opacity-40">{engine.userInput}</span>
               {engine.gameState !== 'finished' && (
@@ -178,7 +279,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.15 }}
                     className="flex flex-col items-center gap-2 text-center max-w-full"
-                    >
+                  >
                     <div className="text-2xl leading-none">{engine.lastResult.passed ? (isDayCompleted ? '🥐🏁' : '🥐✨') : '🥐'}</div>
                     <div>
                       <h2 className="text-2xl md:text-3xl font-black mb-1 uppercase italic tracking-tight leading-none">
@@ -191,7 +292,9 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                             : isDayCompleted
                               ? `День ${currentDay.dayNumber} завершен. Можно сделать паузу и вернуться позже или сразу перейти к дню ${nextDayNumber}.`
                               : 'Прогресс сохранен, можно двигаться дальше.'
-                          : `Нужно ${currentExercise.targetAccuracy}% точности. Сейчас ${engine.lastResult.accuracy}%.`}
+                          : speedGateFailed
+                            ? `Точность уже достаточная, но для зачета нужен темп ${currentExercise.targetCpm} CPM. Сейчас ${engine.lastResult.cpm} CPM.`
+                            : `Нужно ${targetSummary}. Сейчас ${engine.lastResult.accuracy}% и ${engine.lastResult.cpm} CPM.`}
                       </p>
                     </div>
 

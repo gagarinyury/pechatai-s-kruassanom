@@ -11,11 +11,12 @@ import type { ExerciseResult, GameState, KeyStats, RetryableSavePayload, SaveSta
 interface UseTypingEngineOptions {
   exerciseContent: string;
   targetAccuracy: number;
+  targetCpm?: number;
   active: boolean;
   onSaveResult: (result: ExerciseResult, heatmap: Record<string, KeyStats>) => Promise<void>;
 }
 
-export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSaveResult }: UseTypingEngineOptions) {
+export function useTypingEngine({ exerciseContent, targetAccuracy, targetCpm, active, onSaveResult }: UseTypingEngineOptions) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [userInput, setUserInput] = useState('');
   const [mistakes, setMistakes] = useState(0);
@@ -129,14 +130,14 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
     const result: ExerciseResult = {
       ...stats,
       mistakes: nextMistakes,
-      passed: stats.accuracy >= targetAccuracy,
+      passed: stats.accuracy >= targetAccuracy && (targetCpm ? stats.cpm >= targetCpm : true),
     };
 
     setGameState('finished');
     setEndTime(finishedAt);
     setLastResult(result);
     void saveExerciseResult(result, finalHeatmap);
-  }, [targetAccuracy, saveExerciseResult, startTime]);
+  }, [targetAccuracy, targetCpm, saveExerciseResult, startTime]);
 
   // Keyboard event handler
   useEffect(() => {

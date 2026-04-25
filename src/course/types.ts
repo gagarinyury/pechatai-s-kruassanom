@@ -6,6 +6,8 @@ export interface CourseExercise {
   title: string;
   description: string;
   focusKeys: string[];
+  preLessonNote: string;
+  coachNote: string;
   content: string;
   targetAccuracy: number;
   targetCpm?: number;
@@ -24,4 +26,3 @@ export interface CourseWeek {
   title: string;
   days: CourseDay[];
 }
-
