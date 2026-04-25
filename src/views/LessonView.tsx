@@ -67,8 +67,8 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
 
   return (
     <div className="min-h-screen bg-bakery-50 font-sans text-bakery-900 selection:bg-bakery-200">
-      <main className="min-h-screen w-full max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-col gap-2.5">
-        <div className="flex items-center justify-between gap-4">
+      <main className="min-h-screen w-full max-w-[1180px] mx-auto px-4 md:px-6 py-3 flex flex-col gap-2.5">
+        <div className="w-full max-w-[1040px] mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             {engine.gameState !== 'typing' && (
               <button
@@ -92,7 +92,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="w-full max-w-[1040px] mx-auto grid grid-cols-4 gap-2">
           <CompactMetric label="Точность" value={`${engine.liveStats.accuracy}%`} />
           <CompactMetric label="Ошибки" value={engine.mistakes} />
           <CompactMetric label="Скорость" value={engine.liveStats.cpm} />
@@ -100,7 +100,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
         </div>
 
         <section className="flex-1 flex flex-col gap-2.5">
-          <div className="w-full bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative min-h-[180px] md:min-h-[205px] flex items-center">
+          <div className={`w-full max-w-[1040px] mx-auto bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative flex items-center ${engine.gameState === 'finished' ? 'min-h-[250px] md:min-h-[280px]' : 'min-h-[170px] md:min-h-[190px]'}`}>
             <div className="absolute left-5 top-4 right-5 flex items-center justify-between gap-4">
               <p className="text-xs md:text-sm text-bakery-400 font-bold truncate">{currentExercise.description}</p>
               <span className="shrink-0 text-[10px] uppercase tracking-widest font-black text-bakery-400">{currentExercise.type}</span>
@@ -119,7 +119,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
               )}
             </AnimatePresence>
 
-            <div className="w-full pt-7 text-3xl md:text-4xl font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
+            <div className="w-full pt-7 text-3xl md:text-[2.5rem] font-mono leading-snug whitespace-pre-wrap break-words tracking-tight text-bakery-800">
               <span className="opacity-40">{engine.userInput}</span>
               {engine.gameState !== 'finished' && (
                 <span className="relative">
@@ -139,17 +139,17 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                 <motion.div
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute inset-0 bg-bakery-700 rounded-3xl z-40 flex items-center justify-center flex-col text-white p-6 md:p-8 shadow-2xl overflow-hidden"
+                  className="absolute inset-0 bg-bakery-700 rounded-3xl z-40 flex items-center justify-center flex-col text-white p-4 md:p-5 shadow-2xl overflow-hidden"
                 >
                   <motion.div
                     initial={{ y: 24, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.15 }}
-                    className="flex flex-col items-center gap-5 text-center"
-                  >
-                    <div className="text-5xl">{engine.lastResult.passed ? '🥐✨' : '🥐'}</div>
+                      className="flex flex-col items-center gap-3 text-center"
+                    >
+                    <div className="text-3xl">{engine.lastResult.passed ? '🥐✨' : '🥐'}</div>
                     <div>
-                      <h2 className="text-3xl md:text-5xl font-black mb-2 uppercase italic tracking-tight">
+                      <h2 className="text-2xl md:text-4xl font-black mb-1 uppercase italic tracking-tight">
                         {engine.lastResult.passed ? 'Зачтено!' : 'Еще подход'}
                       </h2>
                       <p className="text-bakery-200 font-medium max-w-md">
@@ -159,7 +159,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                       </p>
                     </div>
 
-                    <div className="flex gap-8 md:gap-12 mt-2 bg-bakery-800/50 p-5 rounded-3xl border border-bakery-600/30">
+                    <div className="flex gap-7 md:gap-10 mt-1 bg-bakery-800/50 p-4 rounded-3xl border border-bakery-600/30">
                       <ResultMetric label="Скорость" value={`${engine.lastResult.cpm}`} unit="CPM" />
                       <ResultMetric label="Точность" value={`${engine.lastResult.accuracy}%`} />
                       <ResultMetric label="Ошибки" value={`${engine.lastResult.mistakes}`} />
@@ -171,18 +171,18 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                       {engine.saveState === 'error' && engine.saveError}
                     </div>
 
-                    <div className="flex flex-wrap justify-center gap-3">
+                    <div className="flex flex-wrap justify-center gap-2">
                       <button
                         type="button"
                         onClick={engine.reset}
-                        className="px-6 py-3 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                        className="px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
                       >
                         <RotateCcw className="w-5 h-5" /> Повторить
                       </button>
                       <button
                         type="button"
                         onClick={handleBackToCourse}
-                        className="px-6 py-3 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                        className="px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
                       >
                         <ArrowLeft className="w-5 h-5" /> К курсу
                       </button>
@@ -190,7 +190,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                         <button
                           type="button"
                           onClick={handleContinue}
-                          className="px-8 py-3 bg-white text-bakery-700 rounded-full font-black shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                          className="px-6 py-2.5 bg-white text-bakery-700 rounded-full font-black shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
                         >
                           Следующий урок <ChevronRight className="w-5 h-5" />
                         </button>
