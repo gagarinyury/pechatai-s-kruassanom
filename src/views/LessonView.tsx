@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   ChevronRight,
-  Keyboard,
   RotateCcw,
   Target,
   TrendingUp,
@@ -136,29 +135,6 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             </div>
 
             <AnimatePresence>
-              {engine.gameState === 'idle' && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-white/95 rounded-3xl backdrop-blur-sm z-30 flex items-center justify-center flex-col gap-4 p-6"
-                >
-                  <div className="bg-bakery-100 p-5 rounded-full shadow-inner">
-                    <Keyboard className="w-9 h-9 text-bakery-600" />
-                  </div>
-                  <div className="text-center max-w-md">
-                    <h2 className="text-2xl md:text-3xl font-black text-bakery-800 uppercase tracking-tight">Начните печатать</h2>
-                    <p className="text-bakery-400 font-medium mt-1">{currentExercise.description}</p>
-                  </div>
-                  {engine.worstKeys.length > 0 && (
-                    <div className="mt-1 p-3 bg-orange-50 rounded-2xl flex gap-3 items-center border border-orange-100 shadow-sm">
-                      <TrendingUp className="w-5 h-5 text-orange-600" />
-                      <span className="text-sm font-bold text-orange-800 italic">Тяжело пропекаются: {engine.worstKeys.map((key) => key[0].toUpperCase()).join(', ')}</span>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
               {engine.gameState === 'finished' && engine.lastResult && (
                 <motion.div
                   initial={{ opacity: 0, scale: 1.04 }}
@@ -226,9 +202,16 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             </AnimatePresence>
           </div>
 
+          {engine.worstKeys.length > 0 && engine.gameState === 'idle' && (
+            <div className="mx-auto p-3 bg-orange-50 rounded-2xl flex gap-3 items-center border border-orange-100 shadow-sm">
+              <TrendingUp className="w-5 h-5 text-orange-600" />
+              <span className="text-sm font-bold text-orange-800 italic">Тяжело пропекаются: {engine.worstKeys.map((key) => key[0].toUpperCase()).join(', ')}</span>
+            </div>
+          )}
+
           <div className="w-full space-y-1">
-            <div className="scale-75 md:scale-90 origin-center h-24 md:h-28 overflow-hidden flex items-center justify-center">
-              <HandsGuide activeFinger={engine.activeFinger} />
+            <div className="overflow-hidden flex items-center justify-center">
+              <HandsGuide activeFinger={engine.activeFinger} compact />
             </div>
             <VirtualKeyboard activeKey={engine.activeChar} nextKey={engine.nextChar} pressedKey={engine.pressedKey} />
           </div>
