@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-bakery-50: #fffbeb;
+  --color-bakery-100: #fef3c7;
+  --color-bakery-200: #fde68a;
+  --color-bakery-500: #f59e0b;
+  --color-bakery-600: #d97706;
+  --color-bakery-700: #b45309;
+  --color-bakery-800: #92400e;
+  --color-bakery-900: #78350f;
+  
+  --color-chocolate-500: #3d1d13;
+}
+
+@layer base {
+  body {
+    @apply bg-bakery-50 text-bakery-900;
+  }
+}
+
