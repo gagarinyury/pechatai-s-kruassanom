@@ -209,11 +209,14 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             </div>
           )}
 
-          <div className="w-full space-y-0">
-            <div className="overflow-hidden flex items-center justify-center">
-              <HandsGuide activeFinger={engine.activeFinger} compact />
+          <div className="w-full max-w-[1320px] mx-auto grid grid-cols-1 xl:grid-cols-[112px_minmax(0,1040px)_112px] items-center gap-4">
+            <div className="hidden xl:flex items-center justify-center">
+              <HandsGuide activeFinger={engine.activeFinger} compact side="left" />
             </div>
             <VirtualKeyboard activeKey={engine.activeChar} nextKey={engine.nextChar} pressedKey={engine.pressedKey} compact />
+            <div className="hidden xl:flex items-center justify-center">
+              <HandsGuide activeFinger={engine.activeFinger} compact side="right" />
+            </div>
           </div>
         </section>
       </main>
