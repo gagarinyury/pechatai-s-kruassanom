@@ -32,3 +32,8 @@ export interface ExerciseResult {
   mistakes: number;
   passed: boolean;
 }
+
+export interface RetryableSavePayload {
+  result: ExerciseResult;
+  keyStats: Record<string, KeyStats>;
+}

@@ -15,6 +15,7 @@ import { VirtualKeyboard } from '../components/VirtualKeyboard';
 import { CompactMetric } from '../components/CompactMetric';
 import { ResultMetric } from '../components/ResultMetric';
 import { WEEK_1 } from '../course/week1';
+import { trackEvent } from '../lib/analytics';
 import type { AppView } from '../types';
 
 interface LessonViewProps {
@@ -35,7 +36,12 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
     return currentDay.exercises.find((exercise) => exercise.id === exerciseId) || currentDay.exercises[0];
   }, [currentDay, exerciseId]);
 
+  const currentExerciseIndex = useMemo(() => {
+    return currentDay.exercises.findIndex((exercise) => exercise.id === currentExercise.id);
+  }, [currentDay, currentExercise.id]);
+
   const nextTarget = useMemo(() => getNextExercise(currentDay, currentExercise), [currentDay, currentExercise]);
+  const isLastExerciseInDay = currentExerciseIndex === currentDay.exercises.length - 1;
   const isFinalExercise = !nextTarget;
 
   const handleSaveResult = useCallback(async (result: import('../types').ExerciseResult, heatmap: Record<string, import('../types').KeyStats>) => {
@@ -49,7 +55,10 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
     onSaveResult: handleSaveResult,
   });
 
-  const canContinue = engine.lastResult?.passed && engine.saveState !== 'saving';
+  const canContinue = engine.lastResult?.passed && engine.saveState === 'saved' && Boolean(nextTarget);
+  const isDayCompleted = isLastExerciseInDay && Boolean(engine.lastResult?.passed);
+  const isWeekCompleted = isFinalExercise && Boolean(engine.lastResult?.passed);
+  const nextDayNumber = isDayCompleted && nextTarget ? nextTarget.day.dayNumber : null;
 
   const handleBackToCourse = useCallback(() => {
     engine.reset();
@@ -64,6 +73,29 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [exerciseId]);
+
+  useEffect(() => {
+    trackEvent('lesson_started', {
+      day: currentDay.dayNumber,
+      exercise: currentExercise.id,
+      type: currentExercise.type,
+    });
+  }, [currentDay.dayNumber, currentExercise.id, currentExercise.type]);
+
+  useEffect(() => {
+    if (!engine.lastResult) return;
+
+    trackEvent(engine.lastResult.passed ? 'lesson_completed_passed' : 'lesson_completed_failed', {
+      day: currentDay.dayNumber,
+      exercise: currentExercise.id,
+      accuracy: engine.lastResult.accuracy,
+      cpm: engine.lastResult.cpm,
+    });
+
+    if (engine.lastResult.passed && isFinalExercise) {
+      trackEvent('week_completed', { day: currentDay.dayNumber });
+    }
+  }, [currentDay.dayNumber, currentExercise.id, engine.lastResult, isFinalExercise]);
 
   return (
     <div className="min-h-screen bg-bakery-50 font-sans text-bakery-900 selection:bg-bakery-200">
@@ -100,7 +132,7 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
         </div>
 
         <section className="flex-1 flex flex-col gap-2.5">
-          <div className={`w-full max-w-[1040px] mx-auto bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative flex items-center ${engine.gameState === 'finished' ? 'min-h-[250px] md:min-h-[280px]' : 'min-h-[170px] md:min-h-[190px]'}`}>
+          <div className={`w-full max-w-[1040px] mx-auto bg-white rounded-3xl border-2 border-bakery-100 shadow-xl p-5 md:p-6 relative flex items-center ${engine.gameState === 'finished' ? 'min-h-[330px] md:min-h-[350px]' : 'min-h-[170px] md:min-h-[190px]'}`}>
             <div className="absolute left-5 top-4 right-5 flex items-center justify-between gap-4">
               <p className="text-xs md:text-sm text-bakery-400 font-bold truncate">{currentExercise.description}</p>
               <span className="shrink-0 text-[10px] uppercase tracking-widest font-black text-bakery-400">{currentExercise.type}</span>
@@ -145,54 +177,67 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
                     initial={{ y: 24, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.15 }}
-                      className="flex flex-col items-center gap-3 text-center"
+                    className="flex flex-col items-center gap-2 text-center max-w-full"
                     >
-                    <div className="text-3xl">{engine.lastResult.passed ? '🥐✨' : '🥐'}</div>
+                    <div className="text-2xl leading-none">{engine.lastResult.passed ? (isDayCompleted ? '🥐🏁' : '🥐✨') : '🥐'}</div>
                     <div>
-                      <h2 className="text-2xl md:text-4xl font-black mb-1 uppercase italic tracking-tight">
-                        {engine.lastResult.passed ? 'Зачтено!' : 'Еще подход'}
+                      <h2 className="text-2xl md:text-3xl font-black mb-1 uppercase italic tracking-tight leading-none">
+                        {engine.lastResult.passed ? (isWeekCompleted ? 'Неделя закрыта!' : isDayCompleted ? 'День завершен!' : 'Зачтено!') : 'Еще подход'}
                       </h2>
-                      <p className="text-bakery-200 font-medium max-w-md">
+                      <p className="text-sm md:text-base text-bakery-200 font-medium max-w-md">
                         {engine.lastResult.passed
-                          ? isFinalExercise ? 'Неделя закрыта. Можно смотреть общий результат.' : 'Прогресс сохранен, можно двигаться дальше.'
+                          ? isWeekCompleted
+                            ? 'Неделя закрыта. Можно вернуться в курс и посмотреть общий результат.'
+                            : isDayCompleted
+                              ? `День ${currentDay.dayNumber} завершен. Можно сделать паузу и вернуться позже или сразу перейти к дню ${nextDayNumber}.`
+                              : 'Прогресс сохранен, можно двигаться дальше.'
                           : `Нужно ${currentExercise.targetAccuracy}% точности. Сейчас ${engine.lastResult.accuracy}%.`}
                       </p>
                     </div>
 
-                    <div className="flex gap-7 md:gap-10 mt-1 bg-bakery-800/50 p-4 rounded-3xl border border-bakery-600/30">
+                    <div className="flex gap-6 md:gap-8 mt-1 bg-bakery-800/50 p-3 rounded-2xl border border-bakery-600/30">
                       <ResultMetric label="Скорость" value={`${engine.lastResult.cpm}`} unit="CPM" />
                       <ResultMetric label="Точность" value={`${engine.lastResult.accuracy}%`} />
                       <ResultMetric label="Ошибки" value={`${engine.lastResult.mistakes}`} />
                     </div>
 
-                    <div className="min-h-5 text-xs font-bold text-bakery-100/70">
+                    <div className="min-h-4 text-xs font-bold text-bakery-100/70">
                       {engine.saveState === 'saving' && 'Сохраняю прогресс...'}
                       {engine.saveState === 'saved' && 'Прогресс сохранен'}
                       {engine.saveState === 'error' && engine.saveError}
                     </div>
 
                     <div className="flex flex-wrap justify-center gap-2">
+                      {engine.saveState === 'error' && (
+                        <button
+                          type="button"
+                          onClick={() => void engine.retrySave()}
+                          className="px-4 py-2 bg-white text-bakery-700 rounded-full font-black shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight text-sm"
+                        >
+                          Сохранить снова
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={engine.reset}
-                        className="px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                        className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight text-sm"
                       >
-                        <RotateCcw className="w-5 h-5" /> Повторить
+                        <RotateCcw className="w-4 h-4" /> Повторить
                       </button>
                       <button
                         type="button"
                         onClick={handleBackToCourse}
-                        className="px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                        className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-full font-black hover:bg-white/15 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight text-sm"
                       >
-                        <ArrowLeft className="w-5 h-5" /> К курсу
+                        <ArrowLeft className="w-4 h-4" /> К курсу
                       </button>
                       {canContinue && nextTarget && (
                         <button
                           type="button"
                           onClick={handleContinue}
-                          className="px-6 py-2.5 bg-white text-bakery-700 rounded-full font-black shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight"
+                          className="px-5 py-2 bg-white text-bakery-700 rounded-full font-black shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-tight text-sm"
                         >
-                          Следующий урок <ChevronRight className="w-5 h-5" />
+                          {isDayCompleted ? `Перейти к дню ${nextTarget.day.dayNumber}` : 'Следующий урок'} <ChevronRight className="w-4 h-4" />
                         </button>
                       )}
                     </div>
@@ -209,12 +254,19 @@ export function LessonView({ dayId, exerciseId, onNavigate }: LessonViewProps) {
             </div>
           )}
 
-          <div className="w-full max-w-[1320px] mx-auto grid grid-cols-1 xl:grid-cols-[112px_minmax(0,1040px)_112px] items-center gap-4">
-            <div className="hidden xl:flex items-center justify-center">
+          <div className="relative w-full max-w-[1040px] mx-auto">
+            <div className="absolute left-5 md:left-8 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
               <HandsGuide activeFinger={engine.activeFinger} compact side="left" />
             </div>
-            <VirtualKeyboard activeKey={engine.activeChar} nextKey={engine.nextChar} pressedKey={engine.pressedKey} compact />
-            <div className="hidden xl:flex items-center justify-center">
+            <VirtualKeyboard
+              activeKey={engine.activeChar}
+              nextKey={engine.nextChar}
+              pressedKey={engine.pressedKey}
+              activeFinger={engine.activeFinger}
+              pressedFinger={engine.pressedFinger}
+              compact
+            />
+            <div className="absolute right-5 md:right-8 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
               <HandsGuide activeFinger={engine.activeFinger} compact side="right" />
             </div>
           </div>

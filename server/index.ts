@@ -12,13 +12,41 @@ dotenv.config({ quiet: true });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const dataDir = process.env.DATA_DIR || path.join(rootDir, 'data');
-const databasePath = process.env.DATABASE_PATH || path.join(dataDir, 'croissant.sqlite');
+const isProduction = process.env.NODE_ENV === 'production';
+const defaultDatabasePath = path.join(rootDir, 'data', 'croissant.sqlite');
+const databasePath = process.env.DATABASE_PATH || defaultDatabasePath;
 const sessionSecret = process.env.SESSION_SECRET || 'croissant-dev-secret-change-me';
+const cookieSecure = process.env.COOKIE_SECURE === 'true';
+const appBaseUrl = process.env.APP_BASE_URL || '';
 const cookieName = 'croissant_session';
 const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
-fs.mkdirSync(dataDir, { recursive: true });
+function isLocalAppUrl(value: string) {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    return ['localhost', '127.0.0.1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+if (isProduction) {
+  if (!process.env.DATABASE_PATH) {
+    throw new Error('DATABASE_PATH is required in production');
+  }
+
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'croissant-dev-secret-change-me') {
+    throw new Error('SESSION_SECRET must be set to a non-default value in production');
+  }
+
+  if (!cookieSecure && !isLocalAppUrl(appBaseUrl)) {
+    throw new Error('COOKIE_SECURE=true is required in production');
+  }
+}
+
+fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 
 const db = new Database(databasePath);
 db.pragma('journal_mode = WAL');
@@ -152,7 +180,7 @@ function setSessionCookie(res: Response, userId: number) {
     signed: true,
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.COOKIE_SECURE === 'true',
+    secure: cookieSecure,
     maxAge: thirtyDaysMs,
     path: '/',
   });
@@ -163,7 +191,7 @@ function clearSessionCookie(res: Response) {
     signed: true,
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.COOKIE_SECURE === 'true',
+    secure: cookieSecure,
     path: '/',
   });
 }
@@ -241,6 +269,10 @@ app.post('/api/auth/logout', (_req, res) => {
 app.get('/api/auth/me', (req, res) => {
   const user = getCurrentUser(req);
   res.json({ user: user ? publicUser(user) : null });
+});
+
+app.get('/health', (_req, res) => {
+  res.json({ ok: true });
 });
 
 app.get('/api/progress', requireUser, (req, res) => {

@@ -27,6 +27,8 @@ export function AuthScreen() {
     }
   };
 
+  const isSubmitDisabled = isSubmitting || nickname.trim().length < 2 || password.length < 4;
+
   return (
     <div className="min-h-screen bg-bakery-50 flex items-center justify-center p-4 text-bakery-900">
       <div className="w-full max-w-md bg-white border-2 border-bakery-100 rounded-3xl shadow-xl p-6 md:p-8">
@@ -86,7 +88,7 @@ export function AuthScreen() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitDisabled}
             className="w-full h-13 rounded-2xl bg-bakery-700 text-white font-black uppercase tracking-tight shadow-lg shadow-bakery-500/20 hover:bg-bakery-800 active:scale-[0.99] disabled:opacity-60 transition-all"
           >
             {isSubmitting ? 'Секунду...' : mode === 'register' ? 'Начать неделю' : 'Вернуться к урокам'}

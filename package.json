@@ -11,8 +11,14 @@
     "preview": "vite preview",
     "server": "tsx server/index.ts",
     "start": "NODE_ENV=production tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "npm run typecheck",
+    "smoke:e2e": "npm run smoke:e2e:desktop && npm run smoke:e2e:mobile",
+    "smoke:e2e:desktop": "tsx scripts/smoke-e2e.ts --viewport=desktop",
+    "smoke:e2e:mobile": "tsx scripts/smoke-e2e.ts --viewport=mobile",
+    "backup:db": "node scripts/backup-db.mjs",
+    "restore:db": "node scripts/restore-db.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
@@ -35,6 +41,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "playwright": "^1.59.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

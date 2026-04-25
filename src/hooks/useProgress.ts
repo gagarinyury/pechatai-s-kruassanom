@@ -7,12 +7,16 @@ import type { KeyStats, ProgressRecord, ExerciseResult } from '../types';
 export function useProgress(userId: number | null) {
   const [records, setRecords] = useState<ProgressRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const loadProgress = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await api.progress.list();
       setRecords(data.progress);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить прогресс');
     } finally {
       setLoading(false);
     }
@@ -23,6 +27,7 @@ export function useProgress(userId: number | null) {
       void loadProgress();
     } else {
       setRecords([]);
+      setError('');
     }
   }, [loadProgress, userId]);
 
@@ -104,6 +109,7 @@ export function useProgress(userId: number | null) {
   return {
     records,
     loading,
+    error,
     progressMap,
     isExerciseCompleted,
     isDayCompleted,
@@ -111,6 +117,7 @@ export function useProgress(userId: number | null) {
     completedDaysCount,
     completedExercisesCount,
     weekStats,
+    reload: loadProgress,
     saveResult,
   };
 }

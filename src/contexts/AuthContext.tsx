@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { trackEvent } from '../lib/analytics';
 import type { AuthUser } from '../types';
 
 interface AuthContextValue {
@@ -39,11 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (nickname: string, password: string) => {
     const data = await api.auth.login(nickname, password);
     setUser(data.user);
+    trackEvent('login_success');
   }, []);
 
   const register = useCallback(async (nickname: string, password: string) => {
     const data = await api.auth.register(nickname, password);
     setUser(data.user);
+    trackEvent('signup_success');
   }, []);
 
   const logout = useCallback(async () => {

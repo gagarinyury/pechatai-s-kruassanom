@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SplashScreen } from './views/SplashScreen';
 import { AuthScreen } from './views/AuthScreen';
@@ -11,6 +11,7 @@ import { CourseView } from './views/CourseView';
 import { LessonView } from './views/LessonView';
 import type { AppView } from './types';
 import { WEEK_1 } from './course/week1';
+import { trackPageview } from './lib/analytics';
 
 function AppRouter() {
   const { user, loading } = useAuth();
@@ -23,6 +24,17 @@ function AppRouter() {
     if (nextDayId) setDayId(nextDayId);
     if (nextExerciseId) setExerciseId(nextExerciseId);
   }, []);
+
+  const analyticsPath = useMemo(() => {
+    if (loading) return '/loading';
+    if (!user) return '/auth';
+    if (view === 'lesson') return `/lesson/${dayId}/${exerciseId}`;
+    return '/course';
+  }, [dayId, exerciseId, loading, user, view]);
+
+  useEffect(() => {
+    trackPageview(analyticsPath);
+  }, [analyticsPath]);
 
   if (loading) return <SplashScreen />;
   if (!user) return <AuthScreen />;

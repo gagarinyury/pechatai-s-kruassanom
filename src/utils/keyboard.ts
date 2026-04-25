@@ -27,9 +27,23 @@ export function calculateTypingStats(typedLength: number, mistakes: number, star
   };
 }
 
-export function findFingerForChar(char: string): number | undefined {
+export function getSpaceFingerForInput(input: string): number {
+  for (let index = input.length - 1; index >= 0; index -= 1) {
+    const char = input[index];
+    if (char === ' ') continue;
+
+    const previousFinger = findFingerForChar(char);
+    if (previousFinger === undefined) break;
+
+    return previousFinger <= 4 ? 5 : 4;
+  }
+
+  return 5;
+}
+
+export function findFingerForChar(char: string, inputContext = ''): number | undefined {
   const lower = char.toLowerCase();
-  if (lower === ' ') return 5;
+  if (lower === ' ') return getSpaceFingerForInput(inputContext);
 
   for (const row of RUSSIAN_LAYOUT) {
     const found = row.find((key) => key.key.toLowerCase() === lower || key.shiftKey?.toLowerCase() === lower);

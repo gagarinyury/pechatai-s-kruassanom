@@ -6,7 +6,7 @@ import {
   findRussianCharForCode,
   shouldWarnAboutLayout,
 } from '../utils/keyboard';
-import type { ExerciseResult, GameState, KeyStats, SaveState } from '../types';
+import type { ExerciseResult, GameState, KeyStats, RetryableSavePayload, SaveState } from '../types';
 
 interface UseTypingEngineOptions {
   exerciseContent: string;
@@ -22,12 +22,14 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
+  const [pressedFinger, setPressedFinger] = useState<number | undefined>(undefined);
   const [layoutWarning, setLayoutWarning] = useState('');
   const [keyHeatmap, setKeyHeatmap] = useState<Record<string, KeyStats>>({});
   const [clockNow, setClockNow] = useState(Date.now());
   const [lastResult, setLastResult] = useState<ExerciseResult | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveError, setSaveError] = useState('');
+  const [lastSavePayload, setLastSavePayload] = useState<RetryableSavePayload | null>(null);
 
   const heatmapRef = useRef<Record<string, KeyStats>>({});
   const layoutWarningTimerRef = useRef<number | null>(null);
@@ -39,11 +41,13 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
     setStartTime(null);
     setEndTime(null);
     setPressedKey(undefined);
+    setPressedFinger(undefined);
     setLayoutWarning('');
     setKeyHeatmap({});
     setLastResult(null);
     setSaveState('idle');
     setSaveError('');
+    setLastSavePayload(null);
     heatmapRef.current = {};
   }, []);
 
@@ -75,7 +79,7 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
   const progressPercent = Math.round((userInput.length / exerciseContent.length) * 100);
   const activeChar = exerciseContent[userInput.length] || '';
   const nextChar = exerciseContent[userInput.length + 1] || '';
-  const activeFinger = activeChar ? findFingerForChar(activeChar) : undefined;
+  const activeFinger = activeChar ? findFingerForChar(activeChar, userInput) : undefined;
 
   const worstKeys = useMemo(() => {
     return (Object.entries(keyHeatmap) as Array<[string, KeyStats]>)
@@ -103,6 +107,7 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
   const saveExerciseResult = useCallback(async (result: ExerciseResult, finalHeatmap: Record<string, KeyStats>) => {
     setSaveState('saving');
     setSaveError('');
+    setLastSavePayload({ result, keyStats: finalHeatmap });
 
     try {
       await onSaveResult(result, finalHeatmap);
@@ -112,6 +117,11 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
       setSaveError(error instanceof Error ? error.message : 'Не удалось сохранить прогресс');
     }
   }, [onSaveResult]);
+
+  const retrySave = useCallback(async () => {
+    if (!lastSavePayload) return;
+    await saveExerciseResult(lastSavePayload.result, lastSavePayload.keyStats);
+  }, [lastSavePayload, saveExerciseResult]);
 
   const finishExercise = useCallback((nextInput: string, nextMistakes: number, finalHeatmap: Record<string, KeyStats>) => {
     const finishedAt = Date.now();
@@ -153,7 +163,9 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
       const russianCharForPhysicalKey = findRussianCharForCode(event.code, event.shiftKey);
       if (char.length === 1 || event.code === 'Space') {
         setPressedKey(russianCharForPhysicalKey || char);
+        setPressedFinger(findFingerForChar(expectedChar, userInput));
         window.setTimeout(() => setPressedKey(undefined), 100);
+        window.setTimeout(() => setPressedFinger(undefined), 100);
       }
 
       if (shouldWarnAboutLayout(event, expectedChar)) {
@@ -204,6 +216,7 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
     userInput,
     mistakes,
     pressedKey,
+    pressedFinger,
     layoutWarning,
     keyHeatmap,
     liveStats,
@@ -215,6 +228,7 @@ export function useTypingEngine({ exerciseContent, targetAccuracy, active, onSav
     lastResult,
     saveState,
     saveError,
+    retrySave,
     reset,
   };
 }

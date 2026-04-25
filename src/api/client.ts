@@ -5,14 +5,21 @@ interface ApiErrorShape {
 }
 
 async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(path, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new Error('Не удалось связаться с сервером. Проверьте соединение и попробуйте еще раз.');
+  }
+
   const payload = await response.json().catch(() => ({})) as ApiErrorShape;
 
   if (!response.ok) {

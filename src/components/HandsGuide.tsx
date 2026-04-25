@@ -14,6 +14,9 @@ interface HandsGuideProps {
 }
 
 export const HandsGuide: React.FC<HandsGuideProps> = ({ activeFinger, compact = false, side }) => {
+  const handWidth = side ? (compact ? 144 : 168) : compact ? 88 : 120;
+  const handHeight = side ? (compact ? 118 : 138) : compact ? 74 : 100;
+
   const getFingerFill = (finger: number) => {
     const style = FINGER_STYLES[finger];
     return activeFinger === finger ? style.strong : style.soft;
@@ -25,7 +28,7 @@ export const HandsGuide: React.FC<HandsGuideProps> = ({ activeFinger, compact = 
   };
 
   const leftHand = (
-    <svg width={compact ? 88 : 120} height={compact ? 74 : 100} viewBox="0 0 120 100" className="transition-all duration-300">
+    <svg width={handWidth} height={handHeight} viewBox="0 0 120 100" className="transition-all duration-300">
       {/* Pinky (0) */}
       <motion.rect animate={{ scaleY: activeFinger === 0 ? 1.2 : 1, fill: getFingerFill(0), stroke: getFingerStroke(0) }} x="10" y="40" width="12" height="40" rx="6" strokeWidth="2" style={{ transformOrigin: 'center bottom', transformBox: 'fill-box' }} />
       {/* Ring (1) */}
@@ -41,7 +44,7 @@ export const HandsGuide: React.FC<HandsGuideProps> = ({ activeFinger, compact = 
   );
 
   const rightHand = (
-    <svg width={compact ? 88 : 120} height={compact ? 74 : 100} viewBox="0 0 120 100" className="transition-all duration-300">
+    <svg width={handWidth} height={handHeight} viewBox="0 0 120 100" className="transition-all duration-300">
       {/* Thumb (5) */}
       <motion.rect animate={{ rotate: 30, scale: activeFinger === 5 ? 1.14 : 1, fill: getFingerFill(5), stroke: getFingerStroke(5) }} x="26" y="60" width="12" height="30" rx="6" strokeWidth="2" style={{ transformOrigin: 'center bottom', transformBox: 'fill-box' }} />
       {/* Index (6) */}
@@ -58,7 +61,7 @@ export const HandsGuide: React.FC<HandsGuideProps> = ({ activeFinger, compact = 
 
   if (side) {
     return (
-      <div className={`flex items-center justify-center opacity-80 pointer-events-none ${compact ? 'h-20' : 'h-32'}`}>
+      <div className={`flex items-center justify-center opacity-80 pointer-events-none ${compact ? 'h-[118px] md:h-[126px]' : 'h-36'}`}>
         {side === 'left' ? leftHand : rightHand}
       </div>
     );

@@ -11,10 +11,12 @@ interface KeyboardProps {
   activeKey?: string;
   nextKey?: string;
   pressedKey?: string;
+  activeFinger?: number;
+  pressedFinger?: number;
   compact?: boolean;
 }
 
-export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, pressedKey, compact = false }) => {
+export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, pressedKey, activeFinger, pressedFinger, compact = false }) => {
   const normalizedActiveKey = activeKey?.toLowerCase();
   const normalizedNextKey = nextKey?.toLowerCase();
 
@@ -81,9 +83,14 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
         <motion.div
            animate={{
             scale: pressedKey === ' ' ? 0.98 : 1,
-            backgroundColor: pressedKey === ' ' || activeKey === ' ' ? FINGER_STYLES[5].strong : FINGER_STYLES[5].soft,
-            borderColor: activeKey === ' ' ? FINGER_STYLES[5].strong : FINGER_STYLES[5].border,
-            boxShadow: activeKey === ' ' ? `0 12px 26px ${FINGER_STYLES[5].shadow}` : '0 0 0 rgba(0, 0, 0, 0)',
+            backgroundColor:
+              pressedKey === ' '
+                ? FINGER_STYLES[pressedFinger ?? activeFinger ?? 5].strong
+                : activeKey === ' '
+                  ? FINGER_STYLES[activeFinger ?? 5].soft
+                  : FINGER_STYLES[5].soft,
+            borderColor: activeKey === ' ' ? FINGER_STYLES[activeFinger ?? 5].strong : FINGER_STYLES[5].border,
+            boxShadow: activeKey === ' ' ? `0 12px 26px ${FINGER_STYLES[activeFinger ?? 5].shadow}` : '0 0 0 rgba(0, 0, 0, 0)',
             y: pressedKey === ' ' ? 2 : 0,
           }}
           className={`
@@ -96,7 +103,7 @@ export const VirtualKeyboard: React.FC<KeyboardProps> = ({ activeKey, nextKey, p
               <motion.div 
                 layoutId="bakery-dot"
                 className="absolute -bottom-6 w-2 h-2 rounded-full shadow-sm"
-                style={{ backgroundColor: FINGER_STYLES[5].strong }}
+                style={{ backgroundColor: FINGER_STYLES[activeFinger ?? 5].strong }}
               />
             )}
         </motion.div>

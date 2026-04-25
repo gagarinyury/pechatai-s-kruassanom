@@ -1,0 +1,14 @@
+[Unit]
+Description=Croissant typing trainer
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/croissant
+EnvironmentFile=/srv/croissant/.env.production
+ExecStart=/usr/bin/env npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

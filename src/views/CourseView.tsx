@@ -173,6 +173,22 @@ export function CourseView({ onNavigate }: CourseViewProps) {
           </aside>
 
           <section className="space-y-6">
+            {progress.error && (
+              <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-800 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="font-black">Не удалось загрузить прогресс</div>
+                  <div className="font-medium">{progress.error}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void progress.reload()}
+                  className="shrink-0 px-4 py-2 rounded-full bg-white border border-red-200 text-red-700 font-black hover:bg-red-100 transition-colors"
+                >
+                  Повторить
+                </button>
+              </div>
+            )}
+
             <div className="bg-white border-2 border-bakery-50 rounded-3xl p-6 shadow-sm">
               <span className="text-[10px] text-bakery-400 uppercase font-black tracking-widest">{WEEK_1.title}</span>
               <h2 className="text-2xl md:text-3xl font-black text-bakery-800 tracking-tight mt-1">{currentDay.title}</h2>
