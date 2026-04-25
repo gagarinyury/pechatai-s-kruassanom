@@ -3,7 +3,9 @@ build/
 dist/
 coverage/
 data/
+backups/
 .DS_Store
 *.log
 .env*
 !.env.example
+!.env.production.example
